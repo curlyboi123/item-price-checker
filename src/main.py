@@ -41,7 +41,7 @@ def main():
             "size": "medium",
             "arms": "standard_fully_adjustable",
             "back_support": "fixed_posturefit",
-            "chair_id": "42502223036569"
+            "chair_id": "42502223036569",
         }
     ]
 
@@ -51,29 +51,32 @@ def main():
     arms = "standard_fully_adjustable"
     back_support = "fixed_posturefit"
 
-    matches = [chair for chair in chair_variants if
-               chair["model"] == model and
-               chair["size"] == size and
-               chair["arms"] == arms and
-               chair["back_support"] == back_support
+    matches = [
+        chair
+        for chair in chair_variants
+        if chair["model"] == model
+        and chair["size"] == size
+        and chair["arms"] == arms
+        and chair["back_support"] == back_support
     ]
     if matches:
         chair_variant = matches[0]["chair_id"]
     else:
-        logger.critical("No ID found for chair details selected. Please try different values.")
+        logger.critical(
+            "No ID found for chair details selected. Please try different values."
+        )
         sys.exit()
 
     url = f"{base_url}/{chair_name}?variant={chair_variant}"
 
     response = get_item_price(url)
 
-
     # TODO Seperate this logic into own function
     # Search entire HTML content for section with price
     # Within this section grab exact part with price
     # Convert price into GBP
     # TODO Add error handling for not finding text in HTML
-    start_index = response.find("<span id=\"addToCartText\">")
+    start_index = response.find('<span id="addToCartText">')
     end_index = start_index + response[start_index:].find("</span>")
     price_section = response[start_index:end_index]
 
@@ -85,7 +88,6 @@ def main():
     else:
         logger.critical("Item price not found.")
         sys.exit()
-
 
     gbp_price = int(price) / 100
     print(f"£{gbp_price}")
