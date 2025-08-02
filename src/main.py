@@ -27,6 +27,11 @@ def get_item_price(url: str):
     return html
 
 
+# TODO Refactor to query json https://ukstore.hermanmiller.com/products/aeron-graphite-standard-office-chair.json and extract details
+# TODO Future logic
+# Save current and prev day price to Dynamo table to compare against and alert if price goes down
+# Step function to trigger lambda daily -> SNS to alert
+# Replace values at end of day
 def main():
     base_url = "https://ukstore.hermanmiller.com/products"
 
