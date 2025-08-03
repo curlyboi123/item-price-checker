@@ -1,8 +1,5 @@
-import re
-import sys
+import requests
 import logging
-from urllib.request import urlopen
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
@@ -16,81 +13,43 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 
-def get_item_price(url: str):
-    """Return the price of an item on a website"""
-    logger.info(f"Searching for item price on page: {url}")
-    page = urlopen(url)
+def get_item_price(url: str, size: str, arms: str, back: str):
+    """Return the price of a chair on the Herman Miller website"""
+    r = requests.get(url)
+    chair_data = r.json()
 
-    html_bytes = page.read()
-    html = html_bytes.decode("utf-8")
+    aeron_variants = chair_data["product"]["variants"]
 
-    return html
+    # TODO Improve logic as this should only ever be an array of length 1
+    desired_chair = [
+        variant
+        for variant in aeron_variants
+        if variant["option1"] == size
+        and variant["option2"] == arms
+        and variant["option3"] == back
+    ][0]
+
+    price = desired_chair["price"]
+
+    return price
 
 
-# TODO Refactor to query json https://ukstore.hermanmiller.com/products/aeron-graphite-standard-office-chair.json and extract details
 # TODO Future logic
 # Save current and prev day price to Dynamo table to compare against and alert if price goes down
 # Step function to trigger lambda daily -> SNS to alert
 # Replace values at end of day
 def main():
     base_url = "https://ukstore.hermanmiller.com/products"
+    chair_json_file = "aeron-graphite-standard-office-chair.json"
+    url = f"{base_url}/{chair_json_file}"
 
-    chair_variants = [
-        {
-            "model": "aeron",
-            "size": "medium",
-            "arms": "standard_fully_adjustable",
-            "back_support": "fixed_posturefit",
-            "chair_id": "42502223036569",
-        }
-    ]
+    size = "B - Medium"
+    arms = "Standard Fully Adjustable"
+    back = "Adjustable PostureFit/Tilt Limiter with Forward Tilt"
 
-    chair_name = "aeron-graphite-standard-office-chair"
-    model = "aeron"
-    size = "medium"
-    arms = "standard_fully_adjustable"
-    back_support = "fixed_posturefit"
+    chair_price = get_item_price(url, size, arms, back)
 
-    matches = [
-        chair
-        for chair in chair_variants
-        if chair["model"] == model
-        and chair["size"] == size
-        and chair["arms"] == arms
-        and chair["back_support"] == back_support
-    ]
-    if matches:
-        chair_variant = matches[0]["chair_id"]
-    else:
-        logger.critical(
-            "No ID found for chair details selected. Please try different values."
-        )
-        sys.exit()
-
-    url = f"{base_url}/{chair_name}?variant={chair_variant}"
-
-    response = get_item_price(url)
-
-    # TODO Seperate this logic into own function
-    # Search entire HTML content for section with price
-    # Within this section grab exact part with price
-    # Convert price into GBP
-    # TODO Add error handling for not finding text in HTML
-    start_index = response.find('<span id="addToCartText">')
-    end_index = start_index + response[start_index:].find("</span>")
-    price_section = response[start_index:end_index]
-
-    pattern = r'data-total-price="(\d+)"'
-
-    match = re.search(pattern, price_section)
-    if match:
-        price = match.group(1)  # This returns just the number
-    else:
-        logger.critical("Item price not found.")
-        sys.exit()
-
-    gbp_price = int(price) / 100
-    print(f"£{gbp_price}")
+    print(f"Price: £{chair_price}")
 
 
 if __name__ == "__main__":
