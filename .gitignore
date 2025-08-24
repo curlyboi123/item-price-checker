@@ -3,4 +3,8 @@
 # Terraform
 .terraform/
 
-terraform/.state_bucket_vars.tf
+terraform/state_bucket_vars.tf
+
+# Lambda package
+src/lambda_function/package
+src/lambda_function/*.zip
