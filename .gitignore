@@ -1,1 +1,6 @@
 .venv/
+
+# Terraform
+.terraform/
+
+terraform/.state_bucket_vars.tf
