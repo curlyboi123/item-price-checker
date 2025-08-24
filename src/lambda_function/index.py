@@ -3,6 +3,7 @@ from typing import Dict, Any
 
 import requests
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
 console_handler = logging.StreamHandler()
@@ -51,7 +52,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> str:
     back = "Adjustable PostureFit/Tilt Limiter with Forward Tilt"
 
     chair_price = get_item_price(url, size, arms, back)
-
-    print(f"Price: £{chair_price}")
-
     return chair_price
+
+
+if __name__ == "__main__":
+    print(lambda_handler({}, {}))
